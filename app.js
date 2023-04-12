@@ -57,3 +57,31 @@ async function saveToFile(songName, lyricsContent) {
 		console.log(`Saved ${songName}!`)
 	})
 }
+
+let getTranslatedText = async (text) => {
+	const browser = await puppeteer.launch({ headless: false })
+	const page = await browser.newPage()
+
+	await page.goto(
+		`https://translate.google.com/?sl=ta&tl=en&text=${encodeURIComponent(
+			text
+		)}&op=translate`
+	)
+	await page.type(".er8xn", "")
+	await page.keyboard.press("Enter")
+
+	await page.waitForSelector(".ryNqvb")
+	const translatedText = await page.evaluate(() => {
+		let translatedTextSpans = document.querySelectorAll(".ryNqvb")
+		let translatedText = ""
+		translatedTextSpans = [...translatedTextSpans]
+		translatedTextSpans.forEach((span) => {
+			translatedText += span.innerText
+		})
+		return translatedText
+	})
+
+	await browser.close()
+
+	return translatedText
+}
