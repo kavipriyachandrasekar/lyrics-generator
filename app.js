@@ -1,5 +1,7 @@
 import puppeteer from "puppeteer"
 import fs from "fs"
+import path from "path"
+import { movies } from "./list.js"
 
 let url = (movieName) => {
 	return `https://www.tamil2lyrics.com/movies/${movieName}/`
@@ -43,8 +45,6 @@ let getLyrics = async (url) => {
 
 	await browser.close()
 }
-
-getLyrics(url("24"))
 
 async function saveToFile(songName, lyricsContent) {
 	const folderName = `songs`
@@ -99,3 +99,14 @@ async function translateAllSongs() {
 	}
 }
 
+let newMovies = movies.map((movie) => {
+	return movie.toLowerCase().replace(/\s/g, "-")
+})
+
+async function getLyricsForAllMovies() {
+	for (let i = 0; i < newMovies.length; i++) {
+		await getLyrics(url(newMovies[i]))
+	}
+}
+
+getLyricsForAllMovies()
