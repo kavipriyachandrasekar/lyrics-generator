@@ -108,5 +108,3 @@ async function getLyricsForAllMovies() {
 		await getLyrics(url(newMovies[i]))
 	}
 }
-
-getLyricsForAllMovies()
