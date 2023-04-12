@@ -85,3 +85,17 @@ let getTranslatedText = async (text) => {
 
 	return translatedText
 }
+
+async function translateAllSongs() {
+	const files = fs.readdirSync(path.join("songs"))
+	for (let i = 0; i < files.length; i++) {
+		const file = files[i]
+		const text = fs.readFileSync(path.join("songs", file), "utf-8")
+		const translatedText = await getTranslatedText(text)
+
+		console.log(translatedText)
+
+		fs.writeFileSync(path.join("translated-songs", file), translatedText)
+	}
+}
+
