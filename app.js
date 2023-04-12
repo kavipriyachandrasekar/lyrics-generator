@@ -1,5 +1,7 @@
 import puppeteer from "puppeteer"
 import fs from "fs"
+import path from "path"
+import { movies } from "./list.js"
 
 let url = (movieName) => {
 	return `https://www.tamil2lyrics.com/movies/${movieName}/`
@@ -44,8 +46,6 @@ let getLyrics = async (url) => {
 	await browser.close()
 }
 
-getLyrics(url("24"))
-
 async function saveToFile(songName, lyricsContent) {
 	const folderName = `songs`
 	const fileName = `${folderName}/${songName}`
@@ -56,4 +56,55 @@ async function saveToFile(songName, lyricsContent) {
 		if (err) throw err
 		console.log(`Saved ${songName}!`)
 	})
+}
+
+let getTranslatedText = async (text) => {
+	const browser = await puppeteer.launch({ headless: false })
+	const page = await browser.newPage()
+
+	await page.goto(
+		`https://translate.google.com/?sl=ta&tl=en&text=${encodeURIComponent(
+			text
+		)}&op=translate`
+	)
+	await page.type(".er8xn", "")
+	await page.keyboard.press("Enter")
+
+	await page.waitForSelector(".ryNqvb")
+	const translatedText = await page.evaluate(() => {
+		let translatedTextSpans = document.querySelectorAll(".ryNqvb")
+		let translatedText = ""
+		translatedTextSpans = [...translatedTextSpans]
+		translatedTextSpans.forEach((span) => {
+			translatedText += span.innerText
+		})
+		return translatedText
+	})
+
+	await browser.close()
+
+	return translatedText
+}
+
+async function translateAllSongs() {
+	const files = fs.readdirSync(path.join("songs"))
+	for (let i = 0; i < files.length; i++) {
+		const file = files[i]
+		const text = fs.readFileSync(path.join("songs", file), "utf-8")
+		const translatedText = await getTranslatedText(text)
+
+		console.log(translatedText)
+
+		fs.writeFileSync(path.join("translated-songs", file), translatedText)
+	}
+}
+
+let newMovies = movies.map((movie) => {
+	return movie.toLowerCase().replace(/\s/g, "-")
+})
+
+async function getLyricsForAllMovies() {
+	for (let i = 0; i < newMovies.length; i++) {
+		await getLyrics(url(newMovies[i]))
+	}
 }
